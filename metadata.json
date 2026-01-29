@@ -1,0 +1,8 @@
+{
+  "name": "Olie Music - Educação Musical e Tecnologia",
+  "description": "Portal central do ecossistema Olie Music. Unindo pedagogia musical lúdica (Suzuki, Dalcroze e Gordon) com o software GCM Maestro para famílias, professores e escolas.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
