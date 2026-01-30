@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import PersonaCards from './components/PersonaCards';
@@ -15,54 +15,57 @@ import ComboMaestroKidsLanding from './components/ComboMaestroKidsLanding';
 import AuthoritySection from './components/AuthoritySection';
 import GCMTeaser from './components/GCMTeaser';
 import AdminDashboard from './components/AdminDashboard';
+import AboutPage from './components/AboutPage';
 import Footer from './components/Footer';
+import ToastProvider, { useToast } from './components/Toast';
 import { PRODUCTS, ProductDetail } from './constants/products';
+import { ThemeProvider } from './contexts/ThemeContext';
 
-type View = 'home' | 'product' | 'families' | 'teachers' | 'schools' | 'combo-kids-lp' | 'auth' | 'dashboard' | 'order-tracking' | 'admin-dashboard';
+type View = 'home' | 'product' | 'families' | 'teachers' | 'schools' | 'combo-kids-lp' | 'auth' | 'dashboard' | 'order-tracking' | 'admin-dashboard' | 'about';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [view, setView] = useState<View>('home');
-  const [activeProduct, setActiveProduct] = useState<ProductDetail | null>(null);
+  const [activeProductSlug, setActiveProductSlug] = useState<string | null>(null);
 
-  const navigateToProduct = (slug: string) => {
-    if (slug === 'combo-maestro-kids') {
-      setView('combo-kids-lp');
+  // Router logic based on window.location.hash
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#/', '');
+      const [route, param] = hash.split('/');
+
+      if (route === 'product' && param) {
+        setView('product');
+        setActiveProductSlug(param);
+      } else if (hash === '' || hash === '/') {
+        setView('home');
+      } else {
+        setView(hash as View);
+      }
       window.scrollTo(0, 0);
-      return;
-    }
-    const product = PRODUCTS.find(p => p.slug === slug);
-    if (product) {
-      setActiveProduct(product);
-      setView('product');
-      window.scrollTo(0, 0);
-    }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange(); // Initial check
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleNavigate = (newView: string) => {
+    window.location.hash = `#/${newView}`;
   };
 
-  const handleNavigate = (newView: View) => {
-    setView(newView);
-    setActiveProduct(null);
-    window.scrollTo(0, 0);
-  };
-
-  const handleProductClick = (slug: string) => {
-    navigateToProduct(slug);
-  };
-
-  // View Router Logic
   const renderView = () => {
+    const activeProduct = activeProductSlug ? PRODUCTS.find(p => p.slug === activeProductSlug) : null;
+
     switch(view) {
-      case 'admin-dashboard':
-        return <AdminDashboard onBack={() => handleNavigate('home')} />;
-      case 'combo-kids-lp':
-        return <ComboMaestroKidsLanding onBack={() => handleNavigate('home')} />;
-      case 'product':
-        return activeProduct ? <ProductDetails product={activeProduct} onBack={() => handleNavigate('home')} /> : null;
-      case 'families':
-        return <FamilyLanding />;
-      case 'teachers':
-        return <TeacherLanding />;
-      case 'schools':
-        return <SchoolLanding />;
+      case 'about': return <AboutPage />;
+      case 'admin-dashboard': return <AdminDashboard onBack={() => handleNavigate('home')} />;
+      case 'combo-kids-lp': return <ComboMaestroKidsLanding onBack={() => handleNavigate('home')} />;
+      case 'product': 
+        return activeProduct ? <ProductDetails product={activeProduct} onBack={() => handleNavigate('home')} /> : <div className="pt-40 text-center">Produto não encontrado.</div>;
+      case 'families': return <FamilyLanding />;
+      case 'teachers': return <TeacherLanding />;
+      case 'schools': return <SchoolLanding />;
       case 'order-tracking':
         return (
           <div className="pt-32 pb-24 flex items-center justify-center bg-slate-50 dark:bg-slate-950 min-h-screen">
@@ -71,25 +74,14 @@ const App: React.FC = () => {
                 <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-6 text-slate-900 dark:text-white">Rastreio de Pedido</h2>
                 <div className="space-y-8">
                   <p className="text-slate-600 dark:text-slate-400 text-lg font-medium leading-relaxed">
-                    Insira o código da transação ou o e-mail utilizado na compra (Kiwify ou Hotmart) para verificar o status de entrega do seu material digital.
+                    Insira o código da transação ou o e-mail utilizado na compra.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <input 
-                      type="text" 
-                      placeholder="Código do Pedido (ex: ABC-123)" 
-                      className="flex-grow bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 px-6 py-4 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-slate-900 dark:text-white placeholder:text-slate-400" 
-                    />
-                    <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-4 rounded-2xl font-black uppercase italic tracking-widest shadow-xl shadow-indigo-200 dark:shadow-none transition-all active:scale-95">
-                      Rastrear
-                    </button>
+                    <input type="text" placeholder="Código do Pedido" className="flex-grow bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 px-6 py-4 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-slate-900 dark:text-white" />
+                    <button className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black uppercase italic tracking-widest shadow-xl transition-all active:scale-95">Rastrear</button>
                   </div>
                 </div>
-                <button 
-                  onClick={() => handleNavigate('home')} 
-                  className="mt-12 text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest text-xs underline underline-offset-4 hover:text-indigo-500 transition-colors"
-                >
-                  Voltar ao Início
-                </button>
+                <button onClick={() => handleNavigate('home')} className="mt-12 text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest text-xs underline">Voltar ao Início</button>
              </div>
           </div>
         );
@@ -108,10 +100,9 @@ const App: React.FC = () => {
           <div className="pt-32 pb-24 flex items-center justify-center bg-slate-50 dark:bg-slate-950 min-h-screen">
              <div className="bg-white dark:bg-slate-900 p-12 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-white/5 max-w-2xl w-full text-center">
                 <h2 className="text-3xl font-black uppercase italic tracking-tighter mb-6">Seu Painel Maestro</h2>
-                <p className="text-slate-500 mb-8">Bem-vindo ao Backstage da sua jornada musical.</p>
                 <div className="grid grid-cols-2 gap-4">
-                   <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-white/5">Meus Cursos</div>
-                   <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-white/5">Materiais PDF</div>
+                   <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl">Meus Cursos</div>
+                   <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl">Materiais PDF</div>
                 </div>
              </div>
           </div>
@@ -121,43 +112,19 @@ const App: React.FC = () => {
         return (
           <main className="flex-grow">
             <Hero />
-            
-            <section onClick={(e) => {
-              const target = e.target as HTMLElement;
-              const text = target.innerText.toLowerCase();
-              if (text.includes('famílias') || text.includes('casa')) handleNavigate('families');
-              if (text.includes('professores') || text.includes('didáticos')) handleNavigate('teachers');
-              if (text.includes('escolas') || text.includes('gestão')) handleNavigate('schools');
-            }}>
-              <PersonaCards />
-            </section>
-
+            <PersonaCards />
             <AuthoritySection />
             <LeadCapture />
-
-            <section onClick={(e) => {
-              const target = e.target as HTMLElement;
-              const btnText = target.innerText;
-              if (btnText === 'Saber Mais' || btnText === 'Garantir Agora' || btnText === 'Saber mais' || btnText === 'Acessar Kit de Elite') {
-                const card = target.closest('.group');
-                const title = card?.querySelector('h3')?.innerText;
-                const slug = PRODUCTS.find(p => p.title.toLowerCase().includes(title?.toLowerCase() || ''))?.slug;
-                if (slug) handleProductClick(slug);
-              }
-            }}>
-              <ProductShowcase />
-              <StoreGrid />
-            </section>
-
+            <ProductShowcase />
+            <StoreGrid />
             <GCMTeaser />
             <Testimonials />
-
             <section className="py-24 bg-white dark:bg-slate-900 transition-colors duration-300">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <h2 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter mb-16">
                   O DNA <span className="text-indigo-600 dark:text-indigo-400">Serpa-Híbrido</span>
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-left">
                   <div className="bg-slate-50 dark:bg-slate-800/50 p-12 rounded-[3rem] border border-slate-100 dark:border-white/5">
                     <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 uppercase italic">Educação Pela Escuta</h3>
                     <p className="text-slate-600 dark:text-slate-400 text-xl font-medium">Todo talento é fruto de estímulo.</p>
@@ -182,5 +149,13 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const App: React.FC = () => (
+  <ThemeProvider>
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
+  </ThemeProvider>
+);
 
 export default App;
