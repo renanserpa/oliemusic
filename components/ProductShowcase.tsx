@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type PublicType = 'families' | 'teachers' | 'schools' | 'news';
 
@@ -78,10 +79,10 @@ const ALL_MOCK_PRODUCTS: Product[] = [
 ];
 
 const categoryIcons: Record<PublicType, string> = {
-  families: '▲', // Triângulo
-  teachers: '★', // Estrela
-  schools: '⬢',  // Hexágono
-  news: '✦'      // Brilho
+  families: '▲', 
+  teachers: '★', 
+  schools: '⬢',  
+  news: '✦'      
 };
 
 const categoryColors: Record<PublicType, string> = {
@@ -94,13 +95,13 @@ const categoryColors: Record<PublicType, string> = {
 const generateExtraProducts = (category: PublicType, page: number): Product[] => {
   if (category === 'news') return []; 
 
-  return [1, 2, 3, 4].map((i) => ({
+  return [1, 2].map((i) => ({
     id: `extra-${category}-${page}-${i}`,
     public: category,
     title: `${category.charAt(0).toUpperCase() + category.slice(1)} Pack #${page}-${i}`,
     description: `Conteúdo extra premium nível ${i} para potencializar seus resultados musicais com a Olie.`,
-    price: `R$ ${20 * i},00`,
-    image: `https://images.unsplash.com/photo-${1511379938547 + i * 100}?w=400&h=300&fit=crop`,
+    price: `R$ ${20 * i + (page * 10)},00`,
+    image: `https://images.unsplash.com/photo-${1511379938547 + (page * 100) + i * 10}?w=400&h=300&fit=crop`,
     tooltip: 'Material adicional exclusivo da plataforma.'
   }));
 };
@@ -112,12 +113,12 @@ const ProductShowcase: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   
-  const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const fetchPage = useCallback(async (category: PublicType, pageNum: number) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Simular latência de rede
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const baseProducts = ALL_MOCK_PRODUCTS.filter(p => p.public === category);
     let newItems: Product[] = [];
@@ -128,14 +129,21 @@ const ProductShowcase: React.FC = () => {
       newItems = generateExtraProducts(category, pageNum);
     }
 
-    if (pageNum >= 4 || category === 'news') {
+    // Limitar a 5 páginas para demonstração
+    if (pageNum >= 5 || (category === 'news' && pageNum >= 1)) {
       setHasMore(false);
     }
 
-    setDisplayedProducts(prev => [...prev, ...newItems]);
+    setDisplayedProducts(prev => {
+      // Evitar duplicatas em re-renders rápidos
+      const existingIds = new Set(prev.map(p => p.id));
+      const filteredNew = newItems.filter(p => !existingIds.has(p.id));
+      return [...prev, ...filteredNew];
+    });
     setIsLoading(false);
   }, []);
 
+  // Resetar ao trocar de tab
   useEffect(() => {
     setDisplayedProducts([]);
     setPage(1);
@@ -143,25 +151,23 @@ const ProductShowcase: React.FC = () => {
     fetchPage(activeTab, 1);
   }, [activeTab, fetchPage]);
 
+  // Observer para Infinite Scroll
   useEffect(() => {
-    if (isLoading || !hasMore) return;
-    if (observerRef.current) observerRef.current.disconnect();
+    const currentSentinel = sentinelRef.current;
+    if (!currentSentinel || isLoading || !hasMore) return;
 
-    observerRef.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore) {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
         setPage(prev => {
           const nextPage = prev + 1;
           fetchPage(activeTab, nextPage);
           return nextPage;
         });
       }
-    }, { threshold: 0.1 });
+    }, { threshold: 0.1, rootMargin: '200px' });
 
-    if (sentinelRef.current) {
-      observerRef.current.observe(sentinelRef.current);
-    }
-
-    return () => observerRef.current?.disconnect();
+    observer.observe(currentSentinel);
+    return () => observer.disconnect();
   }, [isLoading, hasMore, activeTab, fetchPage]);
 
   const tabs = [
@@ -174,31 +180,35 @@ const ProductShowcase: React.FC = () => {
   const getPriceTooltipText = (price: string) => {
     if (price.toLowerCase().includes('grátis')) return 'Acesso Gratuito';
     if (price.includes('R$')) return `Preço Base: ${price}`;
-    return price; // Caso de "Sob Consulta" ou "Em Breve"
+    return price;
   };
 
   return (
     <section className="py-24 bg-white dark:bg-slate-950 transition-colors duration-300" id="shop">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-6">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 uppercase italic tracking-tighter"
+          >
             Explore Nosso <span className="text-indigo-600 dark:text-indigo-400">Ecossistema</span>
-          </h2>
+          </motion.h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto font-medium">
-            Materiais didáticos e tecnologias pensadas para cada etapa da jornada musical.
+            Materiais didáticos e tecnologias pensadas para cada etapa da jornada musical. Role para descobrir mais.
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl max-w-fit mx-auto">
+        <div className="flex flex-wrap justify-center gap-2 mb-16 p-2 bg-slate-100 dark:bg-slate-900 rounded-[2rem] max-w-fit mx-auto shadow-inner">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-8 py-3 rounded-xl font-bold text-sm md:text-base transition-all duration-300 active:scale-95 active:translate-y-0.5 ${
+              className={`px-8 py-3 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest transition-all duration-300 ${
                 activeTab === tab.id
-                  ? `${tab.color} text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40 scale-105`
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
+                  ? `${tab.color} text-white shadow-xl scale-105`
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
               {tab.label}
@@ -207,115 +217,141 @@ const ProductShowcase: React.FC = () => {
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {displayedProducts.map((product) => (
-            <div 
-              key={product.id}
-              className={`group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 ${
-                product.isComingSoon ? 'opacity-90' : ''
-              }`}
-            >
-              <div className="relative h-64 overflow-hidden">
-                <img 
-                  src={product.image} 
-                  alt={product.title}
-                  className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${
-                    product.isComingSoon ? 'grayscale brightness-75 blur-[2px] group-hover:blur-0 group-hover:grayscale-0 transition-all' : ''
-                  }`}
-                />
-                
-                {product.isComingSoon && (
-                  <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-100 transition-opacity">
-                    <div className="bg-white/10 backdrop-blur-md border border-white/20 px-8 py-3 rounded-2xl transform -rotate-3">
-                       <span className="text-white font-black uppercase italic tracking-[0.3em] text-xl drop-shadow-lg">EM BREVE</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl mx-auto">
+          <AnimatePresence mode="popLayout">
+            {displayedProducts.map((product, idx) => (
+              <motion.div 
+                key={product.id}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: (idx % 2) * 0.1 }}
+                className={`group bg-white dark:bg-slate-900 rounded-[3rem] overflow-hidden border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col ${
+                  product.isComingSoon ? 'opacity-90' : ''
+                }`}
+              >
+                <div className="relative h-72 overflow-hidden">
+                  <img 
+                    src={product.image} 
+                    alt={product.title}
+                    className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${
+                      product.isComingSoon ? 'grayscale brightness-75 blur-[2px]' : ''
+                    }`}
+                  />
+                  
+                  {product.isComingSoon && (
+                    <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
+                      <div className="bg-white/10 backdrop-blur-md border border-white/20 px-8 py-3 rounded-2xl transform -rotate-3 shadow-2xl">
+                         <span className="text-white font-black uppercase italic tracking-[0.3em] text-xl">EM BREVE</span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {product.badge && (
-                  <div className={`absolute top-4 right-4 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
-                    product.isComingSoon ? 'bg-pink-500 text-white' : 'bg-white/90 dark:bg-slate-800/90 text-indigo-600 dark:text-indigo-400'
-                  }`}>
-                    {product.badge}
-                  </div>
-                )}
-              </div>
-              
-              <div className="p-8 flex flex-col flex-grow">
-                <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                  <span className={`text-xl font-black ${categoryColors[product.public]}`} aria-hidden="true">
-                    {categoryIcons[product.public]}
-                  </span>
-                  {product.title}
-                  {product.isComingSoon && <span className="text-xs bg-pink-100 text-pink-600 px-2 py-0.5 rounded-md uppercase font-black">Beta</span>}
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 mb-6 flex-grow leading-relaxed">
-                  {product.description}
-                </p>
-                
-                <div className="flex items-center justify-between mt-auto">
-                  {/* Price Area with Advanced Tooltip */}
-                  <div className="relative flex flex-col group/tooltip cursor-help">
-                    <span className="text-xs text-slate-400 uppercase font-bold tracking-wider flex items-center gap-1">
-                      {product.isComingSoon ? 'Status' : 'Investimento'}
-                      <svg className="w-3 h-3 text-slate-300 transition-colors group-hover/tooltip:text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                    <span className={`text-2xl font-black transition-transform duration-300 group-hover/tooltip:scale-105 origin-left ${product.isComingSoon ? 'text-pink-500 italic' : 'text-slate-900 dark:text-white'}`}>
-                      {product.price}
-                    </span>
-                    
-                    {/* Tooltip Content - Animated with scale & fade */}
-                    <div className="absolute bottom-full left-0 mb-3 w-56 p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[11px] font-bold leading-tight rounded-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:-translate-y-2 transition-all duration-300 z-30 shadow-2xl pointer-events-none transform translate-y-2">
-                      <div className="flex items-center gap-2 mb-1 text-indigo-400 dark:text-indigo-600">
-                        <span className="text-sm">⭐</span>
-                        <span className="uppercase tracking-widest">{getPriceTooltipText(product.price)}</span>
-                      </div>
-                      <p className="opacity-90">{product.tooltip}</p>
-                      <div className="mt-2 pt-2 border-t border-white/10 dark:border-slate-100 text-[9px] uppercase tracking-widest opacity-60">
-                         {product.isComingSoon ? 'Fique de olho' : 'Garanta seu acesso'}
-                      </div>
-                      {/* Tooltip Arrow */}
-                      <div className="absolute top-full left-6 w-3 h-3 bg-slate-900 dark:bg-white rotate-45 -translate-y-1.5"></div>
+                  {product.badge && (
+                    <div className={`absolute top-6 right-6 backdrop-blur-md px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${
+                      product.isComingSoon ? 'bg-pink-500 text-white' : 'bg-white/90 dark:bg-slate-800/90 text-indigo-600 dark:text-indigo-400'
+                    }`}>
+                      {product.badge}
                     </div>
+                  )}
+                </div>
+                
+                <div className="p-10 flex flex-col flex-grow">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-3xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter flex items-center gap-3">
+                      <span className={`text-2xl font-black ${categoryColors[product.public]}`} aria-hidden="true">
+                        {categoryIcons[product.public]}
+                      </span>
+                      {product.title}
+                    </h3>
                   </div>
                   
-                  <button className={`px-6 py-3 rounded-2xl font-black uppercase text-xs tracking-[0.2em] italic transition-all duration-200 active:scale-[0.96] active:translate-y-0.5 active:shadow-inner ${
-                    product.isComingSoon 
-                    ? 'bg-pink-500 text-white hover:bg-pink-600 shadow-lg shadow-pink-200 dark:shadow-none' 
-                    : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white shadow-sm'
-                  }`}>
-                    {product.isComingSoon ? 'Entrar na Lista' : 'Saber Mais'}
-                  </button>
+                  <p className="text-slate-600 dark:text-slate-400 mb-8 flex-grow text-lg font-medium leading-relaxed">
+                    {product.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between mt-auto pt-8 border-t border-slate-50 dark:border-white/5">
+                    <div className="relative flex flex-col group/tooltip cursor-help">
+                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-[0.2em] mb-1">
+                        {product.isComingSoon ? 'Status' : 'Investimento'}
+                      </span>
+                      <span className={`text-3xl font-black ${product.isComingSoon ? 'text-pink-500 italic' : 'text-slate-900 dark:text-white'}`}>
+                        {product.price}
+                      </span>
+                      
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-0 mb-4 w-64 p-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-3xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:-translate-y-2 transition-all duration-300 z-30 shadow-2xl pointer-events-none">
+                        <div className="flex items-center gap-2 mb-2 text-indigo-400 dark:text-indigo-600">
+                          <span className="text-lg">✨</span>
+                          <span className="uppercase tracking-widest font-black">{getPriceTooltipText(product.price)}</span>
+                        </div>
+                        <p className="opacity-80 leading-relaxed">{product.tooltip}</p>
+                        <div className="absolute top-full left-8 w-4 h-4 bg-slate-900 dark:bg-white rotate-45 -translate-y-2"></div>
+                      </div>
+                    </div>
+                    
+                    <button className={`px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] italic transition-all duration-300 active:scale-95 ${
+                      product.isComingSoon 
+                      ? 'bg-pink-500 text-white hover:bg-pink-600 shadow-xl shadow-pink-200 dark:shadow-none' 
+                      : 'bg-indigo-600 text-white hover:bg-slate-900 shadow-lg shadow-indigo-100 dark:shadow-none'
+                    }`}>
+                      {product.isComingSoon ? 'Lista VIP' : 'Ativar'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
 
-        <div ref={sentinelRef} className="py-12 flex justify-center items-center h-20">
+        {/* Sentinel & Loading UI */}
+        <div ref={sentinelRef} className="py-20 flex flex-col justify-center items-center min-h-[150px]">
           {isLoading && (
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs font-black uppercase tracking-widest text-indigo-600/50">Carregando mais conteúdo...</span>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-5"
+            >
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 border-4 border-indigo-600/20 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-indigo-600 animate-pulse">
+                Sintonizando novos produtos...
+              </span>
+            </motion.div>
           )}
           {!hasMore && displayedProducts.length > 0 && (
-            <p className="text-xs font-black uppercase tracking-widest text-slate-400">Você chegou ao fim do ecossistema.</p>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center gap-4"
+            >
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mb-2"></div>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
+                Fim do Ecossistema Olie • Sinfonia Completa
+              </p>
+            </motion.div>
           )}
         </div>
 
-        <div className="mt-20 p-10 bg-indigo-600 rounded-[3rem] text-center text-white relative overflow-hidden shadow-2xl shadow-indigo-200 dark:shadow-none">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-          <h3 className="text-3xl font-bold mb-4 italic uppercase tracking-tighter">Precisa de algo sob medida?</h3>
-          <p className="text-indigo-100 mb-8 max-w-xl mx-auto text-lg font-medium">
-            Nossa equipe pedagógica pode ajudar a personalizar o ecossistema Olie para sua necessidade específica.
+        {/* Final CTA Card */}
+        <motion.div 
+          whileHover={{ y: -5 }}
+          className="mt-12 p-12 md:p-20 bg-gradient-to-br from-indigo-600 to-indigo-900 rounded-[4rem] text-center text-white relative overflow-hidden shadow-3xl"
+        >
+          <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-[80px]"></div>
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-maestro-red/10 rounded-full blur-[80px]"></div>
+          
+          <h3 className="text-4xl md:text-6xl font-black mb-6 italic uppercase tracking-tighter">
+            Consultoria <span className="text-maestro-blue">Maestro</span>
+          </h3>
+          <p className="text-indigo-100 mb-10 max-w-2xl mx-auto text-xl font-medium leading-relaxed">
+            Nossa equipe pedagógica pode desenhar um plano sob medida para sua escola ou família. Vamos conversar?
           </p>
-          <button className="bg-white text-indigo-600 px-10 py-4 rounded-2xl font-black text-lg uppercase italic tracking-widest hover:bg-indigo-50 active:scale-95 active:translate-y-0.5 active:shadow-inner transition-all shadow-xl">
+          <button className="bg-white text-indigo-900 px-12 py-6 rounded-3xl font-black text-xl uppercase italic tracking-widest hover:bg-indigo-50 active:scale-95 transition-all shadow-2xl">
             Falar com um Especialista
           </button>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
