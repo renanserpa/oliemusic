@@ -15,7 +15,6 @@ interface Product {
   isComingSoon?: boolean;
 }
 
-// Mock de base de dados expandida para simular paginação
 const ALL_MOCK_PRODUCTS: Product[] = [
   {
     id: 'f1',
@@ -78,7 +77,20 @@ const ALL_MOCK_PRODUCTS: Product[] = [
   }
 ];
 
-// Gerador de produtos extras para simular paginação infinita
+const categoryIcons: Record<PublicType, string> = {
+  families: '▲', // Triângulo
+  teachers: '★', // Estrela
+  schools: '⬢',  // Hexágono
+  news: '✦'      // Brilho
+};
+
+const categoryColors: Record<PublicType, string> = {
+  families: 'text-maestro-red',
+  teachers: 'text-maestro-blue',
+  schools: 'text-maestro-purple',
+  news: 'text-pink-500'
+};
+
 const generateExtraProducts = (category: PublicType, page: number): Product[] => {
   if (category === 'news') return []; 
 
@@ -159,6 +171,12 @@ const ProductShowcase: React.FC = () => {
     { id: 'news' as PublicType, label: 'Novidades', color: 'bg-pink-500' },
   ];
 
+  const getPriceTooltipText = (price: string) => {
+    if (price.toLowerCase().includes('grátis')) return 'Acesso Gratuito';
+    if (price.includes('R$')) return `Preço Base: ${price}`;
+    return price; // Caso de "Sob Consulta" ou "Em Breve"
+  };
+
   return (
     <section className="py-24 bg-white dark:bg-slate-950 transition-colors duration-300" id="shop">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -225,6 +243,9 @@ const ProductShowcase: React.FC = () => {
               
               <div className="p-8 flex flex-col flex-grow">
                 <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+                  <span className={`text-xl font-black ${categoryColors[product.public]}`} aria-hidden="true">
+                    {categoryIcons[product.public]}
+                  </span>
                   {product.title}
                   {product.isComingSoon && <span className="text-xs bg-pink-100 text-pink-600 px-2 py-0.5 rounded-md uppercase font-black">Beta</span>}
                 </h3>
@@ -246,10 +267,10 @@ const ProductShowcase: React.FC = () => {
                     </span>
                     
                     {/* Tooltip Content - Animated with scale & fade */}
-                    <div className="absolute bottom-full left-0 mb-3 w-48 p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[11px] font-bold leading-tight rounded-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:-translate-y-2 transition-all duration-300 z-30 shadow-2xl pointer-events-none transform translate-y-2">
+                    <div className="absolute bottom-full left-0 mb-3 w-56 p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[11px] font-bold leading-tight rounded-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:-translate-y-2 transition-all duration-300 z-30 shadow-2xl pointer-events-none transform translate-y-2">
                       <div className="flex items-center gap-2 mb-1 text-indigo-400 dark:text-indigo-600">
                         <span className="text-sm">⭐</span>
-                        <span className="uppercase tracking-widest">{product.isComingSoon ? 'Informação' : 'Destaque'}</span>
+                        <span className="uppercase tracking-widest">{getPriceTooltipText(product.price)}</span>
                       </div>
                       <p className="opacity-90">{product.tooltip}</p>
                       <div className="mt-2 pt-2 border-t border-white/10 dark:border-slate-100 text-[9px] uppercase tracking-widest opacity-60">

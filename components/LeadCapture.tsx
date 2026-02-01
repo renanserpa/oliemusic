@@ -6,7 +6,7 @@ import { useToast } from './Toast';
 const LeadCapture: React.FC = () => {
   const [email, setEmail] = useState('');
   const [publico, setPublico] = useState('familia');
-  const [status, setStatus] = useState<'idle' | 'loading'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   const { showToast } = useToast();
 
   const validateEmail = (email: string) => {
@@ -32,18 +32,21 @@ const LeadCapture: React.FC = () => {
 
       if (error) throw error;
       
+      setStatus('success');
       showToast('Acesso VIP liberado! Verifique seu e-mail.');
       setEmail('');
+      
+      // Retorna ao estado idle após 3 segundos de sucesso
+      setTimeout(() => setStatus('idle'), 3000);
     } catch (err) {
       console.error('Error saving lead:', err);
-      // Demo fallback
+      // Demo fallback simulation
       setTimeout(() => {
+        setStatus('success');
         showToast('Acesso VIP liberado! (Modo Demo)');
         setEmail('');
+        setTimeout(() => setStatus('idle'), 3000);
       }, 1000);
-    } finally {
-      setStatus('loading');
-      setTimeout(() => setStatus('idle'), 1000);
     }
   };
 
@@ -70,18 +73,20 @@ const LeadCapture: React.FC = () => {
                 <input
                   type="email"
                   required
+                  disabled={status !== 'idle'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="voce@exemplo.com"
-                  className="w-full bg-slate-900/50 border-2 border-slate-700 text-white px-6 py-4 rounded-2xl focus:border-indigo-500 transition-all outline-none"
+                  className="w-full bg-slate-900/50 border-2 border-slate-700 text-white px-6 py-4 rounded-2xl focus:border-indigo-500 transition-all outline-none disabled:opacity-50"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Qual seu perfil?</label>
                 <select
+                  disabled={status !== 'idle'}
                   value={publico}
                   onChange={(e) => setPublico(e.target.value)}
-                  className="w-full bg-slate-900/50 border-2 border-slate-700 text-white px-6 py-4 rounded-2xl focus:border-indigo-500 transition-all outline-none appearance-none cursor-pointer"
+                  className="w-full bg-slate-900/50 border-2 border-slate-700 text-white px-6 py-4 rounded-2xl focus:border-indigo-500 transition-all outline-none appearance-none cursor-pointer disabled:opacity-50"
                 >
                   <option value="familia">Família (Pais/Mães)</option>
                   <option value="professor">Professor(a) de Música</option>
@@ -92,16 +97,43 @@ const LeadCapture: React.FC = () => {
 
             <button
               type="submit"
-              disabled={status === 'loading'}
-              className="w-full relative group overflow-hidden bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl uppercase italic tracking-widest transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] active:scale-[0.98]"
+              disabled={status !== 'idle'}
+              className={`w-full relative group overflow-hidden py-5 rounded-2xl font-black text-xl uppercase italic tracking-widest transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] active:scale-[0.98] ${
+                status === 'success' ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white'
+              }`}
             >
               <span className="relative z-10 flex items-center justify-center gap-3">
-                {status === 'loading' ? 'Processando...' : 'Quero Acesso VIP!'}
-                <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+                {status === 'idle' && (
+                  <>
+                    Quero Acesso VIP!
+                    <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </>
+                )}
+                
+                {status === 'loading' && (
+                  <>
+                    <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processando...
+                  </>
+                )}
+
+                {status === 'success' && (
+                  <>
+                    <svg className="w-6 h-6 text-white animate-in zoom-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Acesso Liberado!
+                  </>
+                )}
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              {status === 'idle' && (
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              )}
             </button>
           </form>
           

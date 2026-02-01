@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Evidence {
   id: string;
@@ -51,6 +51,8 @@ const evidences: Evidence[] = [
 ];
 
 const EvidenceGrid: React.FC = () => {
+  const [isLuccaHovered, setIsLuccaHovered] = useState(false);
+
   return (
     <section className="py-32 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative overflow-hidden">
       {/* Background Accents */}
@@ -75,20 +77,49 @@ const EvidenceGrid: React.FC = () => {
 
           {/* NPC Lucca Auditor Bubble */}
           <motion.div 
+            onMouseEnter={() => setIsLuccaHovered(true)}
+            onMouseLeave={() => setIsLuccaHovered(false)}
             whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-6 bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-white/5 relative"
+            className="flex items-center gap-6 bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-white/5 relative cursor-help group/lucca"
           >
-            <div className="w-16 h-16 bg-amber-400 rounded-2xl flex items-center justify-center text-4xl shadow-lg animate-lucca">
-              🧐
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-lg animate-lucca transition-colors duration-300 ${isLuccaHovered ? 'bg-emerald-400' : 'bg-amber-400'}`}>
+              <motion.span
+                key={isLuccaHovered ? 'happy' : 'searching'}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="select-none"
+              >
+                {isLuccaHovered ? '😎' : '🧐'}
+              </motion.span>
             </div>
             <div className="text-left">
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-1">Lucca Auditor</p>
+              <p className={`text-[10px] font-black uppercase tracking-widest mb-1 transition-colors ${isLuccaHovered ? 'text-emerald-500' : 'text-indigo-600'}`}>
+                {isLuccaHovered ? 'Auditado!' : 'Lucca Auditor'}
+              </p>
               <p className="text-sm font-bold text-slate-700 dark:text-slate-300 leading-tight">
-                "Cada vídeo aqui foi validado<br/>pelo meu radar rítmico!"
+                {isLuccaHovered ? (
+                  <>Selo de Qualidade Olie <br/> <span className="text-emerald-500">100% Verificado!</span></>
+                ) : (
+                  <>"Cada vídeo aqui foi validado<br/>pelo meu radar rítmico!"</>
+                )}
               </p>
             </div>
             {/* Speech Bubble Arrow */}
             <div className="absolute -bottom-2 left-10 w-4 h-4 bg-white dark:bg-slate-900 rotate-45 border-r border-b border-slate-100 dark:border-white/5"></div>
+            
+            {/* Hover Tooltip/Arrow pointing to cards */}
+            <AnimatePresence>
+              {isLuccaHovered && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-2xl"
+                >
+                  👇
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
 
@@ -131,13 +162,17 @@ const EvidenceGrid: React.FC = () => {
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">{item.pilar}</span>
                 </div>
 
-                {/* Precision Badge Overlay */}
-                <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-lg">
+                {/* Precision Badge Overlay - Highlighting when Lucca is hovered */}
+                <motion.div 
+                  animate={isLuccaHovered ? { scale: [1, 1.1, 1], boxShadow: ["0 0 0px rgba(16,185,129,0)", "0 0 20px rgba(16,185,129,0.5)", "0 0 0px rgba(16,185,129,0)"] } : {}}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className={`absolute top-4 right-4 text-white px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-lg transition-colors duration-500 ${isLuccaHovered ? 'bg-emerald-400 scale-110' : 'bg-emerald-500'}`}
+                >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-[10px] font-black tracking-tighter">{item.precision} Precisão</span>
-                </div>
+                </motion.div>
               </div>
 
               {/* Card Content */}
