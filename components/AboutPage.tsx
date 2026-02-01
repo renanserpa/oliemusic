@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AboutPage: React.FC = () => {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const team = [
     {
@@ -29,6 +30,33 @@ const AboutPage: React.FC = () => {
       icon: "📖"
     }
   ];
+
+  const faqs = [
+    {
+      question: "O que é o Ecossistema Olie Music?",
+      answer: "É uma plataforma integrada que une pedagogia musical lúdica (Suzuki, Dalcroze, Gordon) a tecnologias avançadas (GCM Maestro). Atendemos famílias, professores e escolas em uma jornada phygital contínua."
+    },
+    {
+      question: "Como funciona a Metodologia Serpa-Híbrida?",
+      answer: "Ela foca no 'Corpo como Metrônomo' e na 'Escuta Ativa'. Unimos o afeto das relações presenciais com o poder de engajamento da gamificação digital, garantindo retenção e aprendizado real."
+    },
+    {
+      question: "O software GCM Maestro é um jogo?",
+      answer: "É uma ferramenta de aprendizagem gamificada. Ele rastreia o progresso rítmico e melódico do aluno, transformando o estudo diário em uma quest épica com recompensas e trilhas de evolução."
+    },
+    {
+      question: "Posso usar a Olie Music apenas em casa?",
+      answer: "Sim! Temos produtos específicos para famílias, como o Combo Sementinha, que permite aos pais guiarem os filhos nos primeiros passos musicais com facilidade e afeto."
+    },
+    {
+      question: "Olie Music oferece suporte para escolas B2B?",
+      answer: "Com certeza. O GCM Maestro B2B é nossa solução enterprise para instituições que buscam inovação pedagógica, controle de evasão e um diferencial competitivo no mercado educacional."
+    }
+  ];
+
+  const toggleFaq = (index: number) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 pt-20 transition-colors duration-300">
@@ -150,6 +178,65 @@ const AboutPage: React.FC = () => {
                   <p className="text-slate-400 font-medium leading-relaxed italic">"{member.bio}"</p>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-32 bg-maestro-canvas dark:bg-slate-950 transition-colors duration-300">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-20 space-y-4">
+            <div className="inline-block px-5 py-2 rounded-full border border-slate-200 dark:border-white/10 glass">
+               <span className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-[0.5em]">Tira-Dúvidas Maestro</span>
+            </div>
+            <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-none">
+              O Que <span className="text-maestro-blue">Você Precisa</span> Saber.
+            </h2>
+          </div>
+
+          <div className="space-y-6">
+            {faqs.map((faq, i) => (
+              <article 
+                key={i} 
+                className={`overflow-hidden transition-all duration-500 border-2 rounded-[3rem] ${
+                  openFaqIndex === i ? 'border-maestro-blue bg-white dark:bg-slate-900 shadow-2xl' : 'border-slate-100 dark:border-white/5 bg-white/50 dark:bg-slate-800/30'
+                }`}
+              >
+                <button 
+                  onClick={() => toggleFaq(i)}
+                  className="w-full text-left p-8 md:p-10 flex items-center justify-between gap-8 outline-none"
+                >
+                  <h3 className={`text-xl md:text-2xl font-black uppercase italic tracking-tight transition-colors ${
+                    openFaqIndex === i ? 'text-maestro-blue' : 'text-slate-900 dark:text-white'
+                  }`}>
+                    {faq.question}
+                  </h3>
+                  <div className={`w-12 h-12 rounded-2xl border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                    openFaqIndex === i ? 'border-maestro-blue bg-maestro-blue text-white rotate-180 shadow-lg' : 'border-slate-200 text-slate-400'
+                  }`}>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {openFaqIndex === i && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                    >
+                      <div className="px-10 pb-10">
+                        <p className="text-slate-600 dark:text-slate-400 font-medium text-lg md:text-xl leading-relaxed border-t border-slate-100 dark:border-white/5 pt-8">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </article>
             ))}
           </div>
         </div>

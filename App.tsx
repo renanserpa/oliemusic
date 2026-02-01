@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import MaestroJourneyOnboarding from './components/MaestroJourneyOnboarding';
 import PersonaCards from './components/PersonaCards';
+import MaestroRoadmap from './components/MaestroRoadmap';
 import ProductShowcase from './components/ProductShowcase';
 import LeadCapture from './components/LeadCapture';
 import StoreGrid from './components/StoreGrid';
@@ -13,15 +15,18 @@ import TeacherLanding from './components/TeacherLanding';
 import SchoolLanding from './components/SchoolLanding';
 import ComboMaestroKidsLanding from './components/ComboMaestroKidsLanding';
 import AuthoritySection from './components/AuthoritySection';
+import EvidenceGrid from './components/EvidenceGrid';
 import GCMTeaser from './components/GCMTeaser';
 import AdminDashboard from './components/AdminDashboard';
 import AboutPage from './components/AboutPage';
+import DigitalStore from './components/DigitalStore';
+import CheckoutMaestro from './components/CheckoutMaestro';
 import Footer from './components/Footer';
 import ToastProvider, { useToast } from './components/Toast';
 import { PRODUCTS, ProductDetail } from './constants/products';
 import { ThemeProvider } from './contexts/ThemeContext';
 
-type View = 'home' | 'product' | 'families' | 'teachers' | 'schools' | 'combo-kids-lp' | 'auth' | 'dashboard' | 'order-tracking' | 'admin-dashboard' | 'about';
+type View = 'home' | 'product' | 'families' | 'teachers' | 'schools' | 'combo-kids-lp' | 'auth' | 'dashboard' | 'order-tracking' | 'admin-dashboard' | 'about' | 'checkout' | 'store';
 
 const AppContent: React.FC = () => {
   const [view, setView] = useState<View>('home');
@@ -35,6 +40,9 @@ const AppContent: React.FC = () => {
 
       if (route === 'product' && param) {
         setView('product');
+        setActiveProductSlug(param);
+      } else if (route === 'checkout' && param) {
+        setView('checkout');
         setActiveProductSlug(param);
       } else if (hash === '' || hash === '/') {
         setView('home');
@@ -61,6 +69,10 @@ const AppContent: React.FC = () => {
       case 'about': return <AboutPage />;
       case 'admin-dashboard': return <AdminDashboard onBack={() => handleNavigate('home')} />;
       case 'combo-kids-lp': return <ComboMaestroKidsLanding onBack={() => handleNavigate('home')} />;
+      case 'checkout':
+        return <CheckoutMaestro productSlug={activeProductSlug || 'default'} onBack={() => handleNavigate('home')} />;
+      case 'store':
+        return <DigitalStore onNavigate={handleNavigate} />;
       case 'product': 
         return activeProduct ? <ProductDetails product={activeProduct} onBack={() => handleNavigate('home')} /> : <div className="pt-40 text-center">Produto não encontrado.</div>;
       case 'families': return <FamilyLanding />;
@@ -112,8 +124,12 @@ const AppContent: React.FC = () => {
         return (
           <main className="flex-grow">
             <Hero />
+            <MaestroJourneyOnboarding onNavigate={handleNavigate} />
             <PersonaCards />
+            <MaestroRoadmap />
             <AuthoritySection />
+            <EvidenceGrid />
+            <DigitalStore onNavigate={handleNavigate} />
             <LeadCapture />
             <ProductShowcase />
             <StoreGrid />

@@ -10,118 +10,118 @@ interface Product {
   description: string;
   image: string;
   checkoutLink: string;
-  color: string;
+  category: 'kids' | 'teachers' | 'schools';
 }
 
 const products: Product[] = [
   {
     id: 'p1',
-    name: 'Combo +230 Atividades',
-    tag: 'PARA PROFESSORES',
+    name: 'Combo Sementinha',
+    tag: 'COMBO KIDS',
     price: '47,00',
     oldPrice: '97,00',
-    description: 'PDFs interativos, jogos rítmicos e dinâmicas de grupo prontas para aplicar.',
-    image: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&h=400&fit=crop',
-    checkoutLink: 'https://kiwify.com.br',
-    color: 'text-emerald-500 bg-emerald-50'
+    description: 'Metodologia Serpa-Híbrida: O afeto de Suzuki com o ritmo de Dalcroze em +230 PDFs.',
+    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&h=400&fit=crop',
+    checkoutLink: 'https://pay.kiwify.com.br/seu-link-aqui',
+    category: 'kids'
   },
   {
     id: 'p2',
-    name: 'Apostila Master GCM',
-    tag: 'METODOLOGIA MASTER',
+    name: 'Maestro Academy',
+    tag: 'PROFESSORES',
     price: '97,00',
     oldPrice: '197,00',
-    description: 'O guia definitivo do Método Serpa-Híbrido. Da teoria à prática em sala de aula.',
-    image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&h=400&fit=crop',
-    checkoutLink: 'https://kiwify.com.br',
-    color: 'text-indigo-600 bg-indigo-50'
+    description: 'Domine a lógica phygital que retém 90% mais alunos e escala sua autoridade musical.',
+    image: 'https://images.unsplash.com/photo-1510915363646-e62f7bb21ee5?w=600&h=400&fit=crop',
+    checkoutLink: 'https://pay.kiwify.com.br/seu-link-aqui',
+    category: 'teachers'
   },
   {
     id: 'p3',
-    name: 'A Revolução Phygital',
-    tag: 'TREINAMENTO ESTRATÉGICO',
+    name: 'GCM Maestro B2B',
+    tag: 'PARA ESCOLAS',
     price: '197,00',
     oldPrice: '397,00',
-    description: 'Como unir o físico e o digital para escalar seus ganhos como educador musical.',
-    image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop',
-    checkoutLink: 'https://hotmart.com.br',
-    color: 'text-pink-600 bg-pink-50'
+    description: 'A sala de aula aumentada. Tecnologia de rastreio rítmico para instituições de elite.',
+    image: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&h=400&fit=crop',
+    checkoutLink: 'https://pay.kiwify.com.br/seu-link-aqui',
+    category: 'schools'
   }
 ];
 
+const CategoryConfig = {
+  kids: { color: 'bg-maestro-red', shadow: 'shadow-maestro-red/20', icon: '▲', label: 'Tônica' },
+  teachers: { color: 'bg-maestro-blue', shadow: 'shadow-maestro-blue/20', icon: '⚡', label: 'Dominante' },
+  schools: { color: 'bg-maestro-purple', shadow: 'shadow-maestro-purple/20', icon: '●', label: 'Sétima' }
+};
+
 const StoreGrid: React.FC = () => {
   return (
-    <section className="py-24 bg-white" id="store">
+    <section className="py-24 bg-maestro-canvas dark:bg-slate-950" id="store">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-          <div className="max-w-2xl">
-            <h2 className="text-4xl md:text-6xl font-black text-slate-900 italic uppercase tracking-tighter mb-4">
-              Vitrine <span className="text-indigo-600">Digital</span>
-            </h2>
-            <p className="text-xl text-slate-600 font-medium">
-              Escolha seu arsenal e transforme suas aulas em experiências inesquecíveis.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-slate-400 font-bold text-sm uppercase tracking-widest">
-            <span className="w-12 h-[2px] bg-slate-200"></span>
-            Materiais Prontos
-          </div>
+        <div className="text-center mb-20 space-y-4">
+          <h2 className="text-5xl md:text-8xl font-[900] text-slate-900 dark:text-white rockstar-title uppercase italic tracking-tighter">
+            Digital <span className="text-maestro-red">Stage</span>
+          </h2>
+          <p className="text-xl text-slate-500 font-medium max-w-2xl mx-auto">
+            Transformando o "Físico" em "Digital" com a clareza da Geometria Maestro.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {products.map((product) => (
-            <div 
-              key={product.id}
-              className="group flex flex-col bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden"
-            >
-              {/* Card Header/Image */}
-              <div className="relative h-64 overflow-hidden">
-                <img 
-                  src={product.image} 
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className={`absolute top-6 left-6 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${product.color}`}>
-                  {product.tag}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          {products.map((product) => {
+            const config = CategoryConfig[product.category];
+            return (
+              <article 
+                key={product.id}
+                className="group relative bg-white dark:bg-slate-900 rounded-5xl p-8 shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 border border-slate-100 dark:border-white/5 flex flex-col"
+              >
+                {/* Lucca Stamp: Validador de Confiança */}
+                <div className="absolute -top-6 -right-4 w-24 h-24 z-20 animate-lucca pointer-events-none">
+                  <div className="w-full h-full bg-amber-400 rounded-full flex items-center justify-center border-4 border-white dark:border-slate-800 shadow-xl">
+                    <span className="text-3xl">🤘</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Card Body */}
-              <div className="p-10 flex flex-col flex-grow">
-                <h3 className="text-2xl font-black text-slate-900 mb-4 leading-tight">
-                  {product.name}
-                </h3>
-                <p className="text-slate-600 font-medium leading-relaxed mb-8 flex-grow">
-                  {product.description}
-                </p>
+                <div className="relative h-60 mb-8 rounded-4xl overflow-hidden">
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className={`absolute top-6 left-6 ${config.color} text-white px-5 py-2 rounded-2xl font-black text-[10px] tracking-widest flex items-center gap-2 shadow-lg`}>
+                    <span className="text-lg">{config.icon}</span> {product.tag}
+                  </div>
+                </div>
 
-                <div className="pt-8 border-t border-slate-50 mt-auto">
-                  <div className="flex items-baseline gap-2 mb-6">
-                    <span className="text-slate-400 text-sm font-bold line-through">R$ {product.oldPrice}</span>
+                <div className="flex-grow space-y-4">
+                  <h3 className="text-3xl font-[900] text-slate-900 dark:text-white uppercase italic tracking-tight leading-none">
+                    {product.name}
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                    {product.description}
+                  </p>
+                </div>
+
+                <div className="mt-10 pt-8 border-t border-slate-50 dark:border-white/5 flex items-center justify-between gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-slate-400 text-xs font-bold line-through">R$ {product.oldPrice}</span>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-indigo-600 font-black text-lg">R$</span>
-                      <span className="text-4xl font-black text-slate-900 tracking-tighter">{product.price}</span>
+                      <span className="text-slate-900 dark:text-white font-black text-4xl tracking-tighter">R$ {product.price}</span>
                     </div>
                   </div>
-
                   <a 
                     href={product.checkoutLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg uppercase italic tracking-widest text-center block hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200 hover:shadow-indigo-100 hover:-translate-y-1"
+                    className={`${config.color} text-white px-8 py-4 rounded-2xl font-black uppercase italic tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl ${config.shadow}`}
                   >
-                    Garantir Agora
+                    Ativar
                   </a>
-                  <div className="flex items-center justify-center gap-2 mt-4 opacity-50">
-                    <svg className="w-3 h-3 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Checkout 100% Seguro</span>
-                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>
